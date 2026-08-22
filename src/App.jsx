@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ReelCard from "./ReelCard.jsx";
 
 const GENRES = [
@@ -24,6 +24,26 @@ export default function App() {
   const [mode, setMode] = useState("wild");
   const [currentGenre, setCurrentGenre] = useState(GENRES[0]);
   const [tracks, setTracks] = useState(PLACEHOLDER_TRACKS);
+  const [isConnected, setIsConnected] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("connected") === "true") {
+      setIsConnected(true);
+      setCheckingAuth(false);
+      // strip the query param so refreshing doesn't re-trigger this branch
+      window.history.replaceState({}, "", "/");
+    } else {
+      fetch("/api/auth/status")
+        .then((res) => res.json())
+        .then((data) => {
+          setIsConnected(data.authenticated);
+          setCheckingAuth(false);
+        })
+        .catch(() => setCheckingAuth(false));
+    }
+  }, []);
 
   function handleSettled(genre) {
     setCurrentGenre(genre);
@@ -46,6 +66,25 @@ export default function App() {
             <span className="text-[15px] font-medium">Genre Roulette</span>
             <i className="ti ti-history text-lg text-neutral-500" aria-hidden="true"></i>
           </div>
+
+          {checkingAuth ? (
+            <p className="text-xs text-neutral-400 text-center mb-4">
+              Checking Spotify connection...
+            </p>
+          ) : isConnected ? (
+            <div className="flex items-center justify-center gap-2 mb-4 text-sm text-green-700">
+              <i className="ti ti-circle-check" aria-hidden="true"></i>
+              <span>Connected to Spotify</span>
+            </div>
+          ) : (
+            <a
+              href="/api/auth/login"
+              className="block w-full text-center py-2.5 mb-4 text-sm font-medium bg-green-600 text-white rounded-lg"
+              target="_blank"
+            >
+              Connect Spotify
+            </a>
+          )}
 
           <div className="flex bg-surface border border-neutral-200 rounded-lg p-[3px] mb-5">
             <button

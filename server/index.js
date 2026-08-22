@@ -78,7 +78,7 @@ app.get("/api/auth/callback", async (req, res) => {
       expiresAt: Date.now() + data.expires_in * 1000
     };
 
-    res.redirect("http://localhost:5173");
+    res.redirect("http://127.0.0.1:5173?connected=true");
   } catch (err) {
     console.error("Token exchange failed:", err);
     res.status(500).send("Token exchange failed");
